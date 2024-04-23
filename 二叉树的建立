@@ -1,0 +1,85 @@
+#define _CRT_SECURE_NO_WARNINGS
+#include<stdio.h>
+#include<stdlib.h>
+#include<iostream>
+using namespace std;
+#define OK 1
+#define ERROR 0
+#define OVERFLOW -2
+
+typedef int status;
+//求叶子节点，总节点，高度；
+typedef struct bitnode
+{
+	char data;
+	struct bitnode* lchild, * rchild;
+}bitnode, * bitree;
+status createbitree(bitree &T)
+{
+	char e;
+	e = getchar();
+	if (' ' == e) T = NULL;
+	else {
+		T = (bitree)malloc(sizeof(bitnode));
+		if (T == NULL)exit(OVERFLOW);
+		T->data = e;
+		createbitree(T->lchild);
+		createbitree(T->rchild);
+	}return OK;
+}
+void preord(bitree T)//先序遍历打印二叉树
+{
+	if (!T)return;
+	cout << T->data ;
+	preord(T->lchild);
+	preord(T->rchild);
+	/*if(T)
+	 {
+	printf("%c", T->data);
+	preord(T->lchild);
+	preord(T->rchild);
+	}*/
+}
+void Inord(bitree T)
+{
+	if (!T)return;
+	Inord(T->lchild);
+	cout << T->data ;
+	Inord(T->rchild);
+}
+void posord(bitree T)
+{
+	if (!T)return;
+	posord(T->lchild);
+	posord(T->rchild);
+	cout << T->data ;
+}
+void freeTree(bitree T)
+{
+	if (T) {
+		freeTree(T->lchild);
+		freeTree(T->rchild);
+		free(T);
+	}
+}
+int main() {
+	bitree T = NULL; // 初始化T为NULL  
+
+	printf("请输入你想创建的二叉树（使用空格分隔，空格代表空节点）:\n");
+	createbitree(T); // 创建二叉树  
+
+	cout<<"先序遍历为："<<endl;
+	preord(T);
+
+	cout <<"\n" << "中序遍历为：" << endl;
+	Inord(T);
+
+	cout << "\n" << "后序遍历为：" << endl;
+	posord(T);
+
+	// 释放二叉树内存  
+	
+	freeTree(T);
+
+	return 0;
+}
