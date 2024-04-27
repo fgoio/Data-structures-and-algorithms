@@ -1,0 +1,321 @@
+#define _CRT_SECURE_NO_WARNINGS
+#include<stdio.h>
+#include<stdlib.h>
+#include<iostream>
+using namespace std;
+#define OK 1
+#define ERROR 0
+#define OVERFLOW -2
+#define MAXSIZE 100
+typedef char TElemtype;
+typedef int status;
+typedef struct BiNode
+{
+	TElemtype Data;
+	BiNode* lchild, *rchild;
+	int tag;
+}BiNode,*Bitree,*SElemtype;//SElemtype
+
+status createbitree(Bitree & T)//先序遍历创建二叉树
+{
+	
+	char e;
+	e = getchar();//接收了还要赋值给e;
+	if (' ' == e) T = NULL;
+	else {
+		T = (Bitree)malloc(sizeof(BiNode));//T = (BiNode*)malloc(sizeof(TElemtpype));错了，应该为BiNode整个结构分配内存，而不是单单其中为 TElemtype 类型的一个元素分配内存 
+		if (T == NULL)exit(OVERFLOW);
+		T->Data = e;
+		createbitree(T->lchild);//递归调用创建 
+		createbitree(T->rchild);
+	}return OK;
+}
+//void createBitree(Bitree& T)为什么会错呢
+//{ char e;
+//
+//e=getchar();
+//if (e == ' ') T = NULL;//t为空 
+//else { T = (BiNode*)malloc(sizeof(BiNode));
+//if (!T)exit(OVERFLOW); T->Data = e;
+//createBitree(T->lchild);
+//createBitree(T->rchild); 
+//} 
+//} 
+
+
+typedef struct SqStack
+{
+	SElemtype* top;
+	SElemtype* base;
+	int stacksize;
+	int tag;//标记栈的状态或者其他用途的一个额外成员
+}SqStack;
+status initStack(SqStack &s)
+{
+	s.base = (SElemtype*)malloc(MAXSIZE*sizeof(SElemtype));//不应该为一个元素分配空间，要*MAXSIZE
+	if (!s.base)exit(OVERFLOW);
+	 s.top= s.base;
+	s.stacksize = MAXSIZE;
+	return OK;//返回表示成功初始化栈
+}
+
+status stackempty(SqStack& s)//判空
+{
+	if (s.top == s.base)
+		return OK;
+	else
+		return ERROR;
+}
+status stackfull(SqStack& s)//判满
+{
+	if (s.top - s.base == MAXSIZE)
+		return OK;
+	else
+		return ERROR;
+}
+status Push(SqStack& s, SElemtype e)//压栈
+{
+	if (stackfull(s) == OK)
+	{
+		return ERROR;
+	}
+	else {
+		*s.top = e;
+		s.top++;
+	}return OK;
+}
+status Pop(SqStack& s, SElemtype *e)//弹栈(因为top指向的内存不存放空间，所以是--top);
+{
+	if (stackempty(s) == OK)
+	{
+		return ERROR;
+	}
+	else {
+		s.top--;
+		*e = *s.top;
+	}return OK;
+}
+status Gettop(SqStack& s, SElemtype e)
+{
+	if (stackempty(s) != OK)
+	{
+		e = *(s.top - 1);
+	}return OK;
+}
+//根左右
+void preord1(Bitree T)//递归先序遍历打印二叉树
+{
+	if (!T)return;
+	cout << T->Data;//生成根节点
+	preord1(T->lchild);//构造左子树
+	preord1(T->rchild);//构造右子树
+}//当前访问为空，Pop弹出的一定是栈顶元素
+void preord2(Bitree T)
+{
+	if (!T) return; // 若树为空，返回错误状态
+	SqStack s;
+	initStack(s);
+	Bitree p = T, q = NULL;
+
+	while (p || !stackempty(s))
+	{
+		while (p)
+		{
+			cout << p->Data;
+			Push(s, p);
+			p = p->lchild;
+		}
+		if (!stackempty(s))
+		{
+			Pop(s, &q);
+			p = q->rchild;
+		}
+	}
+}
+// 构建一棵二叉树
+	/*
+		  A
+		 / \\
+		B   C
+	    \\
+	      D
+	*/
+void Inord1(Bitree T)//中序左根右
+{
+	if (!T)return;
+	Inord1(T->lchild);
+	cout << T->Data;
+	Inord1(T->rchild);
+}
+void Inord2(Bitree T)//中序左根右
+{
+	if (!T) return; // 若树为空，返回错误状态
+	SqStack s;
+	initStack(s);
+	Bitree p = T, q = NULL;//p先指向二叉树的根节点
+	while (p || !stackempty(s))
+	{
+		while (p)
+		{
+			Push(s, p);
+			p = p->lchild;
+			
+		}
+		if (!stackempty(s))
+		{
+			Pop(s, &q);
+			cout << q->Data;
+			p = q->rchild;
+		}
+	}
+
+}
+//左右根
+void posord1(Bitree T)
+{
+	if (!T)return;
+	posord1(T->lchild);
+	posord1(T->rchild);
+	cout << T->Data;
+}
+//void posord2(Bitree T)
+//{
+//	if (!T) return; // 若树为空，返回错误状态
+//	SqStack s;
+//	initStack(s);
+//	Bitree p = T;//临时变量p记录当前访问的节点；p先指向二叉树的根节点
+//	Bitree q = NULL;//临时变量q记录上一个访问的节点，因为从右边访问根节点，一定是访问左子树为空—》p->NULL，然后再gettop(s,p),p->E,但是E的右子树又为空，所以直接弹出E，然后q->E,p->NULL;
+//	while (p || !stackempty(s))
+//	{
+//		if (p)
+//		{
+//			Push(s, p);
+//			p = p->lchild;
+//		}
+//		else
+//		{
+//			Gettop(s, q);
+//			if (p == nullptr) // 确保p不是nullptr  
+//			{
+//				// 处理p为null的情况，可能是栈为空或者其他异常情况  
+//				break; // 或者抛出异常，或者做其他错误处理  
+//			}
+//			//之前没有访问过右结点；
+//			if (q->rchild != NULL && q->rchild != p)
+//			{
+//				q = p->rchild;
+//				Push(s, q);
+//				p = q->lchild;
+//			}
+//			else
+//			{
+//				Pop(s, &p);
+//				cout << p->Data;
+//				q = p;//记录当前访问的是p节点；
+//				p = NULL;//把P置空，进入下一次循环，直到栈内无元素，且为空时遍历完成；
+//			}
+//		}
+//	}
+//}//
+//void PostorderSearch( BiNode *T )
+//{
+//	BiNode *p, *stack[ MAXSIZE ];
+//	int top = 0;//栈顶位置下标
+//	if( T == NULL ) 
+//	{
+//		return;
+//	}
+//	p = T;
+//	while( 1 )
+//	{
+//		if( p != NULL )//p非空，则入栈，之后p向左走 
+//		{
+//			stack[ top++ ] = p;
+//			p = p->lchild;
+//		}
+//		else//p为空，则出栈 
+//		{
+//			p = stack[ --top ];
+//			//右为空，且flag为真，则访问，之后p置空 
+//			if( p->rchild == NULL || ->tag == 1 )
+//			{
+//				cout << p->Data;
+//				p = NULL;
+//			} 
+//			else//右非空，则p重新入栈，重复入栈标志flag置为真，之后p向右走
+//			{
+//				stack[ top++ ] = p;
+//				p->flag = 1;
+//				p = p->rchild;
+//			}
+//		} 
+//		if( top == 0 )//栈为空，则结束遍历
+//		{
+//			break;
+//		}
+//	}
+//}
+void posord2(BiNode* T)
+{
+	BiNode* p, * stack[MAXSIZE];
+	int top = 0; // 栈顶位置下标
+	if (T == NULL)
+	{
+		return;
+	}
+	p = T;
+	while (1)
+	{
+		if (p != NULL)
+		{
+			stack[top++] = p;
+			p = p->lchild;
+		}
+		else
+		{
+			p = stack[--top];
+			if (p->tag == 1 || p->rchild == NULL) // 先判断右子树
+			{
+				cout << p->Data;
+				p = NULL;
+			}
+			else
+			{
+				p->tag = 1; // 设置标志为已经访问过左子树
+				stack[top++] = p;
+				p = p->rchild;
+			}
+		}
+		if (top == 0)
+		{
+			break;
+		}
+	}
+}
+int main()
+{
+	Bitree T;
+	cout << "请按照先序遍历的方式输入各结点（空格代表空节点）：" << endl;
+	createbitree(T);
+	cout << "递归先序遍历的结果：" << endl;
+	preord1(T);
+	printf("\n");
+	cout << "非递归先序遍历的结果：" << endl;
+	preord2(T);
+	printf("\n");
+	cout << "递归中序遍历的结果：" << endl;
+	Inord1(T);
+	printf("\n");
+	cout << "非递归中序遍历的结果：" << endl;
+	Inord2(T);
+	printf("\n");
+	cout << "递归后序遍历的结果：" << endl;
+	posord1(T);
+	printf("\n");
+	cout << "非递归后序遍历的结果：" << endl;
+	posord2(T);
+	printf("\n");
+	system("pause");
+	return 0;
+
+}
